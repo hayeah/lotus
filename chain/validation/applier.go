@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"fmt"
 	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/specs-actors/actors/abi"
@@ -36,6 +37,7 @@ func (a *Applier) ApplyMessage(eCtx *vtypes.ExecutionContext, state vstate.VMWra
 }
 
 func (a *Applier) ApplyTipSetMessages(state vstate.VMWrapper, blocks []vtypes.BlockMessagesInfo, epoch abi.ChainEpoch, rnd vstate.RandomnessSource) ([]vtypes.MessageReceipt, error) {
+	fmt.Println("APPLYING HEIGHT ", epoch)
 	sw := state.(*StateWrapper)
 	cs := store.NewChainStore(sw.bs, sw.ds, vdrivers.NewChainValidationSyscalls())
 	sm := stmgr.NewStateManager(cs)
