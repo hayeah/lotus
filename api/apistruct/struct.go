@@ -116,7 +116,7 @@ type FullNodeStruct struct {
 		StateNetworkName                  func(context.Context) (dtypes.NetworkName, error)                                                                   `perm:"read"`
 		StateMinerSectors                 func(context.Context, address.Address, *abi.BitField, bool, types.TipSetKey) ([]*api.ChainSectorInfo, error)        `perm:"read"`
 		StateMinerProvingSet              func(context.Context, address.Address, types.TipSetKey) ([]*api.ChainSectorInfo, error)                             `perm:"read"`
-		StateMinerProvingDeadline func(context.Context, address.Address, types.TipSetKey) (*miner.DeadlineInfo, error)     `perm:"read"`
+		StateMinerProvingDeadline         func(context.Context, address.Address, types.TipSetKey) (*miner.DeadlineInfo, error)                                `perm:"read"`
 		StateMinerPower                   func(context.Context, address.Address, types.TipSetKey) (*api.MinerPower, error)                                    `perm:"read"`
 		StateMinerInfo                    func(context.Context, address.Address, types.TipSetKey) (miner.MinerInfo, error)                                    `perm:"read"`
 		StateMinerDeadlines               func(context.Context, address.Address, types.TipSetKey) (*miner.Deadlines, error)                                   `perm:"read"`
@@ -220,6 +220,7 @@ type WorkerStruct struct {
 		Paths     func(context.Context) ([]stores.StoragePath, error)            `perm:"admin"`
 		Info      func(context.Context) (storiface.WorkerInfo, error)            `perm:"admin"`
 
+		AddDummyPiece  func(ctx context.Context, sector abi.SectorID, epcs []abi.UnpaddedPieceSize, sz abi.UnpaddedPieceSize) (abi.PieceInfo, error)                                                              `perm:"admin"`
 		SealPreCommit1 func(ctx context.Context, sector abi.SectorID, ticket abi.SealRandomness, pieces []abi.PieceInfo) (storage.PreCommit1Out, error)                                                           `perm:"admin"`
 		SealPreCommit2 func(context.Context, abi.SectorID, storage.PreCommit1Out) (cids storage.SectorCids, err error)                                                                                            `perm:"admin"`
 		SealCommit1    func(ctx context.Context, sector abi.SectorID, ticket abi.SealRandomness, seed abi.InteractiveSealRandomness, pieces []abi.PieceInfo, cids storage.SectorCids) (storage.Commit1Out, error) `perm:"admin"`
@@ -504,7 +505,7 @@ func (c *FullNodeStruct) StateMinerProvingSet(ctx context.Context, addr address.
 	return c.Internal.StateMinerProvingSet(ctx, addr, tsk)
 }
 
-func (c *FullNodeStruct)  StateMinerProvingDeadline(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*miner.DeadlineInfo, error) {
+func (c *FullNodeStruct) StateMinerProvingDeadline(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*miner.DeadlineInfo, error) {
 	return c.Internal.StateMinerProvingDeadline(ctx, addr, tsk)
 }
 
@@ -788,6 +789,10 @@ func (w *WorkerStruct) Paths(ctx context.Context) ([]stores.StoragePath, error) 
 
 func (w *WorkerStruct) Info(ctx context.Context) (storiface.WorkerInfo, error) {
 	return w.Internal.Info(ctx)
+}
+
+func (w *WorkerStruct) AddDummyPiece(ctx context.Context, sector abi.SectorID, epcs []abi.UnpaddedPieceSize, sz abi.UnpaddedPieceSize) (abi.PieceInfo, error) {
+	return w.Internal.AddDummyPiece(ctx, sector, epcs, sz)
 }
 
 func (w *WorkerStruct) SealPreCommit1(ctx context.Context, sector abi.SectorID, ticket abi.SealRandomness, pieces []abi.PieceInfo) (storage.PreCommit1Out, error) {
