@@ -26,7 +26,7 @@ import (
 	"github.com/filecoin-project/lotus/lib/jsonrpc"
 	"github.com/filecoin-project/lotus/lib/lotuslog"
 	"github.com/filecoin-project/lotus/node/repo"
-	"github.com/filecoin-project/sector-storage"
+	sectorstorage "github.com/filecoin-project/sector-storage"
 	"github.com/filecoin-project/sector-storage/sealtasks"
 	"github.com/filecoin-project/sector-storage/stores"
 )
@@ -154,6 +154,7 @@ var runCmd = &cli.Command{
 		var taskTypes []sealtasks.TaskType
 
 		taskTypes = append(taskTypes, sealtasks.TTFetch)
+		taskTypes = append(taskTypes, sealtasks.TTAddPiece)
 
 		if cctx.Bool("precommit1") {
 			taskTypes = append(taskTypes, sealtasks.TTPreCommit1)

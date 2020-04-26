@@ -85,6 +85,8 @@ var runCmd = &cli.Command{
 			}
 		}
 
+		log.Infof("Open repo")
+
 		storageRepoPath := cctx.String(FlagStorageRepo)
 		r, err := repo.NewFS(storageRepoPath)
 		if err != nil {
@@ -98,6 +100,8 @@ var runCmd = &cli.Command{
 		if !ok {
 			return xerrors.Errorf("repo at '%s' is not initialized, run 'lotus-storage-miner init' to set it up", storageRepoPath)
 		}
+
+		log.Infof("Setup node")
 
 		var minerapi api.StorageMiner
 		stop, err := node.New(ctx,
@@ -115,16 +119,22 @@ var runCmd = &cli.Command{
 			return err
 		}
 
+		log.Infof("Setup done")
+
 		endpoint, err := r.APIEndpoint()
 		if err != nil {
 			return err
 		}
+
+		log.Infof("Bootstrap with full node")
 
 		// Bootstrap with full node
 		remoteAddrs, err := nodeApi.NetAddrsListen(ctx)
 		if err != nil {
 			return err
 		}
+
+		log.Infof("Connect to remote addrs")
 
 		if err := minerapi.NetConnect(ctx, remoteAddrs); err != nil {
 			return err
