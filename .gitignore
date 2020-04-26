@@ -21,7 +21,7 @@ extern/filecoin-ffi/rust/target
 .DS_STORE
 build/.*
 build/paramfetch.sh
-/vendor
+# /vendor
 /blocks.dot
 /blocks.svg
 /chainwatch
