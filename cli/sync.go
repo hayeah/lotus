@@ -10,7 +10,6 @@ import (
 	"gopkg.in/urfave/cli.v2"
 
 	"github.com/filecoin-project/lotus/api"
-	"github.com/filecoin-project/lotus/build"
 	"github.com/filecoin-project/lotus/chain"
 )
 
@@ -186,10 +185,16 @@ func SyncWait(ctx context.Context, napi api.FullNode) error {
 
 		fmt.Printf("\r\x1b[2KWorker %d: Target: %s\tState: %s\tHeight: %d", working, target, chain.SyncStageString(ss.Stage), ss.Height)
 
-		if time.Now().Unix()-int64(head.MinTimestamp()) < build.BlockDelay {
+		// allowedblockDelay := build.BlockDelay
+		var allowedblockDelay int64 = 600
+		currentBlockDelay := time.Now().Unix() - int64(head.MinTimestamp())
+
+		if currentBlockDelay < allowedblockDelay {
 			fmt.Println("\nDone!")
 			return nil
 		}
+
+		log.Infof("\nWait for sync, current tip %d has long delay: %d", head.Height(), currentBlockDelay)
 
 		select {
 		case <-ctx.Done():
