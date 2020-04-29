@@ -169,6 +169,8 @@ var runCmd = &cli.Command{
 			taskTypes = append(taskTypes, sealtasks.TTCommit2)
 		}
 
+		taskTypes = append(taskTypes, sealtasks.TTFinalize)
+
 		if len(taskTypes) == 0 {
 			return xerrors.Errorf("no task types specified")
 		}
