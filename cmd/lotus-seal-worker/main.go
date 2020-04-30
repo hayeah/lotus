@@ -330,8 +330,11 @@ var runCmd = &cli.Command{
 
 		log.Info("Waiting for tasks")
 
+		// Use the ssid of the worker local store as the ssid of the worker. This is persistent across restart.
+		workerUUID := localStore.ID
+
 		go func() {
-			if err := nodeApi.WorkerConnect(ctx, "ws://"+cctx.String("address")+"/rpc/v0"); err != nil {
+			if err := nodeApi.WorkerConnect(ctx, "ws://"+cctx.String("address")+"/rpc/v0", string(workerUUID)); err != nil {
 				log.Errorf("Registering worker failed: %+v", err)
 				cancel()
 				return

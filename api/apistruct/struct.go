@@ -190,7 +190,7 @@ type StorageMinerStruct struct {
 		SectorsRefs   func(context.Context) (map[string][]api.SealedRef, error)       `perm:"read"`
 		SectorsUpdate func(context.Context, abi.SectorNumber, api.SectorState) error  `perm:"write"`
 
-		WorkerConnect func(context.Context, string) error                             `perm:"admin"` // TODO: worker perm
+		WorkerConnect func(context.Context, string, string) error                     `perm:"admin"` // TODO: worker perm
 		WorkerStats   func(context.Context) (map[uint64]storiface.WorkerStats, error) `perm:"admin"`
 
 		StorageList          func(context.Context) (map[stores.ID][]stores.Decl, error)                                            `perm:"admin"`
@@ -705,8 +705,8 @@ func (c *StorageMinerStruct) SectorsUpdate(ctx context.Context, id abi.SectorNum
 	return c.Internal.SectorsUpdate(ctx, id, state)
 }
 
-func (c *StorageMinerStruct) WorkerConnect(ctx context.Context, url string) error {
-	return c.Internal.WorkerConnect(ctx, url)
+func (c *StorageMinerStruct) WorkerConnect(ctx context.Context, url string, uuid string) error {
+	return c.Internal.WorkerConnect(ctx, url, uuid)
 }
 
 func (c *StorageMinerStruct) WorkerStats(ctx context.Context) (map[uint64]storiface.WorkerStats, error) {

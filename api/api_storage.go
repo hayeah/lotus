@@ -43,7 +43,7 @@ type StorageMiner interface {
 	StorageStat(ctx context.Context, id stores.ID) (stores.FsStat, error)
 
 	// WorkerConnect tells the node to connect to workers RPC
-	WorkerConnect(context.Context, string) error
+	WorkerConnect(context.Context, string, string) error
 	WorkerStats(context.Context) (map[uint64]storiface.WorkerStats, error)
 
 	stores.SectorIndex

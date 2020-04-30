@@ -168,8 +168,8 @@ func (sm *StorageMinerAPI) SectorsUpdate(ctx context.Context, id abi.SectorNumbe
 	return sm.Miner.ForceSectorState(ctx, id, sealing.SectorState(state))
 }
 
-func (sm *StorageMinerAPI) WorkerConnect(ctx context.Context, url string) error {
-	w, err := connectRemoteWorker(ctx, sm, url)
+func (sm *StorageMinerAPI) WorkerConnect(ctx context.Context, url string, uuid string) error {
+	w, err := connectRemoteWorker(ctx, sm, url, uuid)
 	if err != nil {
 		return xerrors.Errorf("connecting remote storage failed: %w", err)
 	}
