@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -103,6 +104,11 @@ var runCmd = &cli.Command{
 			Name:  "commit",
 			Usage: "enable commit (32G sectors: all cores or GPUs, 128GiB Memory + 64GiB swap)",
 			Value: true,
+		},
+		&cli.StringSliceFlag{
+			Name:  "bind-store",
+			Usage: "Associate a remote store with a locally mounted filesystem path",
+			// Value: []string{},
 		},
 	},
 	Action: func(cctx *cli.Context) error {
@@ -246,6 +252,20 @@ var runCmd = &cli.Command{
 		localStore, err := stores.NewLocal(ctx, lr, nodeApi, []string{"http://" + cctx.String("address") + "/remote"})
 		if err != nil {
 			return err
+		}
+
+		binds := cctx.StringSlice("bind-store")
+		for _, bind := range binds {
+			// <ssid>:<path>
+			parts := strings.Split(bind, ":")
+			if len(parts) != 2 {
+				return xerrors.Errorf("invalid bind-store: %s", bind)
+			}
+
+			storageSSID := parts[0]
+			localPath := parts[1]
+
+			localStore.BindRemoteStore(stores.ID(storageSSID), localPath)
 		}
 
 		// Setup remote sector store
