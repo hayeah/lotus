@@ -16,8 +16,14 @@ import (
 )
 
 type remoteWorker struct {
+	// remote worker ID, persistent across worker restarts
+	UUID string
 	api.WorkerApi
 	closer jsonrpc.ClientCloser
+}
+
+func (r *remoteWorker) ID() string {
+	return r.UUID
 }
 
 func (r *remoteWorker) NewSector(ctx context.Context, sector abi.SectorID) error {
@@ -28,7 +34,7 @@ func (r *remoteWorker) AddPiece(ctx context.Context, sector abi.SectorID, pieceS
 	return abi.PieceInfo{}, xerrors.New("unsupported")
 }
 
-func connectRemoteWorker(ctx context.Context, fa api.Common, url string) (*remoteWorker, error) {
+func connectRemoteWorker(ctx context.Context, fa api.Common, url, uuid string) (*remoteWorker, error) {
 	token, err := fa.AuthNew(ctx, []api.Permission{"admin"})
 	if err != nil {
 		return nil, xerrors.Errorf("creating auth token for remote connection: %w", err)
@@ -42,7 +48,7 @@ func connectRemoteWorker(ctx context.Context, fa api.Common, url string) (*remot
 		return nil, xerrors.Errorf("creating jsonrpc client: %w", err)
 	}
 
-	return &remoteWorker{wapi, closer}, nil
+	return &remoteWorker{uuid, wapi, closer}, nil
 }
 
 func (r *remoteWorker) Close() error {
