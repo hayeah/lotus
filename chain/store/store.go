@@ -48,6 +48,7 @@ import (
 var log = logging.Logger("chainstore")
 
 var chainHeadKey = dstore.NewKey("head")
+var tipsetMessageValidationCacheKeyPrefix = dstore.NewKey("tipsetMessageValidation")
 
 type ChainStore struct {
 	bs bstore.Blockstore
@@ -208,6 +209,24 @@ func (cs *ChainStore) SubHeadChanges(ctx context.Context) chan []*api.HeadChange
 
 func (cs *ChainStore) SubscribeHeadChanges(f func(rev, app []*types.TipSet) error) {
 	cs.headChangeNotifs = append(cs.headChangeNotifs, f)
+}
+
+func (cs *ChainStore) IsTipSetValidated(ctx context.Context, ts *types.TipSet) (bool, error) {
+	key := tipsetMessageValidationCacheKeyPrefix.Instance(ts.Key().String())
+
+	return cs.ds.Has(key)
+}
+
+func (cs *ChainStore) MarkTipSetAsValidated(ctx context.Context, ts *types.TipSet) error {
+	key := tipsetMessageValidationCacheKeyPrefix.Instance(ts.Key().String())
+
+	err := cs.ds.Put(key, []byte{0})
+
+	if err != nil {
+		return xerrors.Errorf("errored while expanding tipset: %w", err)
+	}
+
+	return err
 }
 
 func (cs *ChainStore) SetGenesis(b *types.BlockHeader) error {

@@ -1168,10 +1168,19 @@ func (syncer *Syncer) syncMessagesAndCheckState(ctx context.Context, headers []*
 	ss.SetHeight(0)
 
 	return syncer.iterFullTipsets(ctx, headers, func(ctx context.Context, fts *store.FullTipSet) error {
-		log.Debugw("validating tipset", "height", fts.TipSet().Height(), "size", len(fts.TipSet().Cids()))
-		if err := syncer.ValidateTipSet(ctx, fts); err != nil {
-			log.Errorf("failed to validate tipset: %+v", err)
-			return xerrors.Errorf("message processing failed: %w", err)
+		isValidated, err := syncer.store.IsTipSetAsValidated(ctx, fts.TipSet())
+		if err != nil {
+			return err
+		}
+
+		if isValidated {
+			log.Debugw("already validated tipset", "height", fts.TipSet().Height())
+		} else {
+			log.Debugw("validating tipset", "height", fts.TipSet().Height(), "size", len(fts.TipSet().Cids()))
+			if err := syncer.ValidateTipSet(ctx, fts); err != nil {
+				log.Errorf("failed to validate tipset: %+v", err)
+				return xerrors.Errorf("message processing failed: %w", err)
+			}
 		}
 
 		stats.Record(ctx, metrics.ChainNodeWorkerHeight.M(int64(fts.TipSet().Height())))
@@ -1187,13 +1196,31 @@ func (syncer *Syncer) iterFullTipsets(ctx context.Context, headers []*types.TipS
 	defer span.End()
 
 	span.AddAttributes(trace.Int64Attribute("num_headers", int64(len(headers))))
+	ss := extractSyncState(ctx)
 
 	windowSize := 200
 	for i := len(headers) - 1; i >= 0; {
-		fts, err := syncer.store.TryFillTipSet(headers[i])
+
+		ts := headers[i]
+
+		// also check tipset validation cache here, to save a TryFillTipSet
+		isValidated, err := syncer.store.IsTipSetAsValidated(ctx, ts)
 		if err != nil {
 			return err
 		}
+
+		if isValidated {
+			log.Debugw("already validated tipset", "height", ts.Height())
+			ss.SetHeight(ts.Height())
+			i--
+			continue
+		}
+
+		fts, err := syncer.store.TryFillTipSet(ts)
+		if err != nil {
+			return err
+		}
+
 		if fts != nil {
 			if err := cb(ctx, fts); err != nil {
 				return err
@@ -1249,6 +1276,11 @@ func (syncer *Syncer) iterFullTipsets(ctx context.Context, headers []*types.TipS
 
 			if err := copyBlockstore(bs, syncer.store.Blockstore()); err != nil {
 				return xerrors.Errorf("message processing failed: %w", err)
+			}
+
+			// Should mark a tipset as "validated" only after persisting messages and blocks
+			if err := syncer.store.MarkTipSetAsValidated(ctx, fts.TipSet()); err != nil {
+				return err
 			}
 		}
 		i -= batchSize
